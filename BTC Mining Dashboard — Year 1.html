@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTC Mining Dashboard — Year 1</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0f0f0f;
+  --surface: #181818;
+  --surface2: #1f1f1f;
+  --border: #2a2a2a;
+  --border-light: #333;
+  --text: #f5f5f0;
+  --text-2: #a0a09a;
+  --text-3: #666660;
+  --orange: #f7931a;
+  --orange-soft: rgba(247,147,26,0.12);
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #eab308;
+  --blue: #3b82f6;
+}
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+/* NAV */
+nav { position: sticky; top: 0; z-index: 100; background: rgba(15,15,15,0.96); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 40px; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+.nav-logo { font-size: 14px; font-weight: 700; letter-spacing: -0.3px; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.nav-logo .accent { color: var(--orange); }
+.nav-links { display: flex; gap: 28px; }
+.nav-links a { font-size: 13px; color: var(--text-2); text-decoration: none; font-weight: 500; transition: color 0.15s; }
+.nav-links a:hover { color: var(--text); }
+.nav-pill { font-size: 11px; font-weight: 600; letter-spacing: 0.5px; color: var(--orange); background: var(--orange-soft); border: 1px solid rgba(247,147,26,0.25); padding: 4px 12px; border-radius: 20px; white-space: nowrap; }
+@media(max-width:700px){ .nav-links { display: none; } }
+
+/* HERO */
+.hero { padding: 72px 40px 56px; max-width: 1100px; margin: 0 auto; border-bottom: 1px solid var(--border); }
+.hero-eye { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--orange); margin-bottom: 18px; }
+.hero h1 { font-size: clamp(38px, 6.5vw, 76px); font-weight: 900; letter-spacing: -3px; line-height: 0.98; color: var(--text); max-width: 780px; margin-bottom: 24px; }
+.hero h1 em { font-style: normal; color: var(--orange); }
+.hero-sub { font-size: 16px; color: var(--text-2); max-width: 500px; line-height: 1.65; }
+
+/* ── CALCULATOR ── */
+.calc-section { border-bottom: 1px solid var(--border); background: var(--surface); }
+.calc-inner { max-width: 1100px; margin: 0 auto; padding: 48px 40px; }
+@media(max-width:600px){ .calc-inner { padding: 32px 20px; } }
+
+.calc-header { margin-bottom: 32px; }
+.calc-header .section-eye { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--orange); margin-bottom: 8px; }
+.calc-header h2 { font-size: clamp(20px, 3vw, 32px); font-weight: 900; letter-spacing: -1px; color: var(--text); margin-bottom: 6px; }
+.calc-header p { font-size: 13px; color: var(--text-2); max-width: 480px; line-height: 1.6; }
+
+.calc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: var(--border); border: 1px solid var(--border); margin-bottom: 2px; }
+.calc-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; background: var(--border); border: 1px solid var(--border); }
+@media(max-width:800px){ .calc-grid { grid-template-columns: 1fr 1fr; } }
+@media(max-width:500px){ .calc-grid, .calc-grid-2 { grid-template-columns: 1fr; } }
+
+.calc-field { background: var(--bg); padding: 20px 22px 18px; }
+.calc-field label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); margin-bottom: 8px; }
+.calc-field .input-wrap { position: relative; display: flex; align-items: center; }
+.calc-field .prefix { position: absolute; left: 12px; font-size: 14px; color: var(--text-3); font-weight: 600; pointer-events: none; }
+.calc-field .suffix { position: absolute; right: 12px; font-size: 12px; color: var(--text-3); font-weight: 600; pointer-events: none; }
+.calc-field input[type="number"],
+.calc-field input[type="text"] {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color 0.15s;
+  -moz-appearance: textfield;
+}
+.calc-field input[type="number"]::-webkit-outer-spin-button,
+.calc-field input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+.calc-field input:focus { border-color: var(--orange); }
+.calc-field input.has-prefix { padding-left: 26px; }
+.calc-field input.has-suffix { padding-right: 40px; }
+.calc-field .field-hint { font-size: 11px; color: var(--text-3); margin-top: 6px; }
+
+/* RANGE SLIDER */
+.calc-field input[type="range"] {
+  width: 100%; -webkit-appearance: none; appearance: none;
+  height: 3px; background: var(--border-light); border-radius: 2px; outline: none; margin-top: 12px;
+  cursor: pointer;
+}
+.calc-field input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 16px; height: 16px;
+  border-radius: 50%; background: var(--orange); cursor: pointer;
+  border: 2px solid var(--bg);
+}
+.calc-field .range-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-3); margin-top: 4px; }
+.calc-field .range-display { font-size: 22px; font-weight: 900; letter-spacing: -0.8px; color: var(--orange); line-height: 1; margin-bottom: 4px; }
+
+.calc-reset-row { display: flex; align-items: center; justify-content: space-between; padding: 16px 0 0; flex-wrap: wrap; gap: 12px; }
+.calc-reset { background: transparent; border: 1px solid var(--border-light); color: var(--text-2); font-size: 12px; font-weight: 600; padding: 8px 18px; border-radius: 4px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.calc-reset:hover { border-color: var(--text-2); color: var(--text); }
+.calc-note { font-size: 12px; color: var(--text-3); }
+
+/* METRICS STRIP */
+.metrics-strip { border-bottom: 1px solid var(--border); }
+.metrics-inner { max-width: 1100px; margin: 0 auto; padding: 0 40px; display: grid; grid-template-columns: repeat(5,1fr); border-left: 1px solid var(--border); }
+@media(max-width:900px){ .metrics-inner { grid-template-columns: repeat(3,1fr); padding: 0 20px; } }
+@media(max-width:600px){ .metrics-inner { grid-template-columns: repeat(2,1fr); padding: 0 20px; } }
+.metric { padding: 28px 24px 24px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.metric-label { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); margin-bottom: 10px; }
+.metric-value { font-size: clamp(20px, 2.5vw, 30px); font-weight: 900; letter-spacing: -1px; color: var(--text); line-height: 1; margin-bottom: 5px; }
+.metric-value.up { color: var(--green); }
+.metric-value.orange { color: var(--orange); }
+.metric-sub { font-size: 12px; color: var(--text-3); margin-bottom: 5px; }
+.metric-change { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; }
+.metric-change.up { color: var(--green); }
+.metric-change.dn { color: var(--red); }
+
+/* PAGE */
+.page { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
+@media(max-width:600px){ .page { padding: 0 20px; } }
+
+/* SECTIONS */
+.section { padding: 64px 0 48px; border-bottom: 1px solid var(--border); }
+.section:last-child { border-bottom: none; padding-bottom: 80px; }
+.section-eye { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-3); margin-bottom: 8px; }
+.section-title { font-size: clamp(22px, 3.5vw, 38px); font-weight: 900; letter-spacing: -1.3px; color: var(--text); margin-bottom: 8px; }
+.section-desc { font-size: 14px; color: var(--text-2); max-width: 480px; margin-bottom: 32px; line-height: 1.65; }
+
+/* CHART PANELS */
+.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--border); border: 1px solid var(--border); }
+.chart-grid.full { grid-template-columns: 1fr; }
+@media(max-width:800px){ .chart-grid { grid-template-columns: 1fr; } }
+.chart-panel { background: var(--bg); padding: 24px 24px 18px; }
+.chart-panel-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.chart-panel-desc { font-size: 12px; color: var(--text-3); margin-bottom: 18px; }
+.chart-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+.leg { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-2); }
+.leg-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* MONTH PILLS */
+.month-selector { display: flex; gap: 4px; margin-bottom: 20px; flex-wrap: wrap; }
+.mpill { background: transparent; border: 1px solid var(--border-light); color: var(--text-3); font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.mpill:hover { border-color: var(--text-2); color: var(--text); }
+.mpill.active { background: var(--orange); border-color: var(--orange); color: #000; }
+
+/* DETAIL */
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--border); border: 1px solid var(--border); }
+@media(max-width:700px){ .detail-grid { grid-template-columns: 1fr; } }
+.detail-col { background: var(--bg); padding: 24px 24px; }
+.detail-col-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); margin-bottom: 18px; }
+.drow { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.drow:last-child { border-bottom: none; }
+.dkey { font-size: 13px; color: var(--text-2); }
+.dval { font-size: 14px; font-weight: 700; letter-spacing: -0.3px; }
+.dval.green { color: var(--green); }
+.dval.red { color: var(--red); }
+.dval.orange { color: var(--orange); }
+.dval.yellow { color: var(--yellow); }
+
+/* LTV */
+.ltv-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 2px; background: var(--border); border: 1px solid var(--border); }
+@media(max-width:800px){ .ltv-grid { grid-template-columns: repeat(2,1fr); } }
+.ltv-cell { background: var(--bg); padding: 20px 22px; }
+.ltv-month-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-3); margin-bottom: 8px; }
+.ltv-pct-val { font-size: 28px; font-weight: 900; letter-spacing: -1.5px; line-height: 1; margin-bottom: 10px; }
+.ltv-bar-bg { height: 3px; background: var(--surface2); border-radius: 2px; overflow: hidden; margin-bottom: 6px; }
+.ltv-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s; }
+.ltv-status-txt { font-size: 11px; color: var(--text-3); font-weight: 500; }
+.ltv-warn { font-size: 10px; font-weight: 700; color: var(--red); margin-top: 4px; }
+
+/* CALLOUT */
+.callout { background: var(--surface); border: 1px solid var(--border-light); border-left: 3px solid var(--orange); padding: 18px 22px; margin-bottom: 32px; }
+.callout p { font-size: 14px; color: var(--text-2); line-height: 1.7; }
+.callout p strong { color: var(--text); font-weight: 600; }
+
+/* STRATEGY */
+.strategy-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 52px; }
+@media(max-width:800px){ .strategy-layout { grid-template-columns: 1fr; gap: 32px; } }
+.strat-h3 { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: var(--text); margin-bottom: 14px; }
+.strat-p { font-size: 14px; color: var(--text-2); line-height: 1.7; margin-bottom: 12px; }
+.strat-p strong { color: var(--text); font-weight: 600; }
+.spread-table { width: 100%; border-collapse: collapse; margin-bottom: 32px; }
+.spread-table th { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-3); text-align: left; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.spread-table td { font-size: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.spread-table tr:last-child td { border-bottom: none; }
+.tc { color: var(--text); font-weight: 700; }
+.tg { color: var(--green); font-weight: 700; }
+.tm { color: var(--text-2); font-size: 12px; }
+.spec-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; background: var(--border); border: 1px solid var(--border); }
+@media(max-width:600px){ .spec-grid { grid-template-columns: repeat(2,1fr); } }
+.spec-cell { background: var(--bg); padding: 18px 20px; }
+.spec-key { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-3); margin-bottom: 5px; }
+.spec-val { font-size: 16px; font-weight: 800; letter-spacing: -0.3px; }
+.totals-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 2px; background: var(--border); border: 1px solid var(--border); }
+@media(max-width:700px){ .totals-grid { grid-template-columns: repeat(2,1fr); } }
+.total-cell { background: var(--bg); padding: 22px 22px; }
+.total-key { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-3); margin-bottom: 8px; }
+.total-val { font-size: 24px; font-weight: 900; letter-spacing: -0.8px; }
+
+/* SENSITIVITY TABLE */
+.sens-controls { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 24px; align-items: flex-end; }
+.sens-control { display: flex; flex-direction: column; gap: 6px; }
+.sens-control label { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); }
+.sens-control select {
+  background: var(--surface2); border: 1px solid var(--border-light);
+  color: var(--text); font-family: inherit; font-size: 13px; font-weight: 600;
+  padding: 8px 12px; border-radius: 4px; outline: none; cursor: pointer;
+}
+.sens-control select:focus { border-color: var(--orange); }
+.sens-table-wrap { overflow-x: auto; }
+.sens-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.sens-table th {
+  background: var(--surface); color: var(--text-3);
+  font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+  padding: 10px 14px; text-align: right; border: 1px solid var(--border);
+  white-space: nowrap;
+}
+.sens-table th:first-child { text-align: left; }
+.sens-table td {
+  padding: 10px 14px; text-align: right;
+  border: 1px solid var(--border); font-weight: 700;
+  white-space: nowrap; transition: background 0.15s;
+}
+.sens-table td:first-child { text-align: left; color: var(--text-2); font-weight: 600; background: var(--surface); }
+.sens-table td.cell-great  { background: rgba(34,197,94,0.15);  color: var(--green); }
+.sens-table td.cell-good   { background: rgba(34,197,94,0.07);  color: #86efac; }
+.sens-table td.cell-ok     { background: rgba(234,179,8,0.10);  color: var(--yellow); }
+.sens-table td.cell-tight  { background: rgba(247,147,26,0.10); color: var(--orange); }
+.sens-table td.cell-under  { background: rgba(239,68,68,0.08);  color: var(--red); font-weight: 600; }
+.sens-table td.cell-active-row { outline: 2px solid var(--orange); outline-offset: -2px; }
+.sens-note { font-size: 12px; color: var(--text-3); margin-top: 14px; line-height: 1.6; }
+.sens-note strong { color: var(--text-2); }
+
+/* FOOTER */
+.footer-wrap { border-top: 1px solid var(--border); padding: 28px 40px; max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+.footer-copy { font-size: 12px; color: var(--text-3); }
+.footer-link { font-size: 12px; color: var(--orange); text-decoration: none; }
+.footer-link:hover { text-decoration: underline; }
+
+/* LIVE BADGE */
+.live-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--green); background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); padding: 3px 10px; border-radius: 20px; }
+.live-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* COLLATERALIZE SECTION */
+.collat-section { margin-top: 2px; border: 1px solid var(--border); }
+.collat-header { background: var(--bg); padding: 22px 24px 18px; border-bottom: 1px solid var(--border); }
+.collat-header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.collat-title { font-size: 15px; font-weight: 800; letter-spacing: -0.3px; color: var(--text); margin-bottom: 4px; }
+.collat-desc { font-size: 12px; color: var(--text-3); line-height: 1.5; }
+.collat-note { font-size: 11px; color: var(--text-3); background: var(--surface2); border: 1px solid var(--border-light); padding: 5px 12px; border-radius: 20px; white-space: nowrap; align-self: flex-start; margin-top: 2px; }
+.collat-tiers { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; background: var(--border); }
+@media(max-width:600px){ .collat-tiers { grid-template-columns: 1fr; } }
+.collat-tier {
+  background: var(--bg); padding: 22px 22px 20px; cursor: pointer;
+  transition: background 0.15s, border-color 0.15s; position: relative;
+  border: 2px solid transparent; outline: none; text-align: left;
+  font-family: inherit; width: 100%; display: block;
+}
+.collat-tier:hover { background: var(--surface); }
+.collat-tier.active { border-color: var(--orange); background: var(--surface); }
+.collat-tier.active .tier-applied { display: inline-block; }
+.tier-applied { display: none; position: absolute; top: 14px; right: 14px; font-size: 10px; font-weight: 700; color: var(--orange); background: var(--orange-soft); padding: 2px 8px; border-radius: 10px; letter-spacing: 0.5px; }
+.tier-name { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+.tier-name.minimum { color: #ef4444; }
+.tier-name.recommended { color: var(--orange); }
+.tier-name.ideal { color: var(--green); }
+.tier-btc { font-size: 26px; font-weight: 900; letter-spacing: -1px; line-height: 1; color: var(--text); margin-bottom: 3px; }
+.tier-usd { font-size: 13px; color: var(--text-2); font-weight: 500; margin-bottom: 10px; }
+.tier-ltv-bar-bg { height: 3px; background: var(--surface2); border-radius: 2px; margin-bottom: 6px; overflow: hidden; }
+.tier-ltv-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s; }
+.tier-detail-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-top: 1px solid var(--border); }
+.tier-detail-key { font-size: 11px; color: var(--text-3); }
+.tier-detail-val { font-size: 12px; font-weight: 700; color: var(--text-2); }
+.tier-cta { font-size: 12px; font-weight: 600; color: var(--text-3); margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
+.collat-tier.active .tier-cta { color: var(--orange); }
+.collat-formula { background: var(--surface); padding: 13px 22px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-3); line-height: 1.6; }
+.collat-formula strong { color: var(--text-2); font-weight: 600; }
+.collat-formula code { font-family: monospace; font-size: 11px; color: var(--orange); background: var(--surface2); padding: 1px 5px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">⚡ <span class="accent">BTC</span> Mining Dashboard</div>
+  <div class="nav-links">
+    <a href="#calculator">Calculator</a>
+    <a href="#performance">Performance</a>
+    <a href="#strategy">BLOC</a>
+  </div>
+  <span class="nav-pill">Year 1</span>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eye">M73 516T · Strike BLOC Strategy</div>
+  <h1>Mine bitcoin.<br><em>Never sell a sat.</em></h1>
+  <p class="hero-sub">Adjust the calculator below — every chart, metric, and monthly breakdown updates live. Use a Bitcoin Line of Credit to fund electricity costs in fiat while your stack compounds.</p>
+</div>
+
+<!-- ── CALCULATOR ── -->
+<div class="calc-section" id="calculator">
+  <div class="calc-inner">
+    <div class="calc-header">
+      <div class="section-eye">Live Calculator</div>
+      <h2>Adjust Your Inputs</h2>
+      <p>Change any value below to recalculate all charts and metrics instantly.</p>
+    </div>
+
+    <!-- DURATION ROW -->
+    <div class="calc-grid-2" style="margin-bottom:2px;">
+      <div class="calc-field" style="background:var(--surface2);border:1px solid var(--orange);border-radius:0;">
+        <label style="color:var(--orange);">Projection Duration</label>
+        <div class="range-display" id="disp-duration" style="color:var(--orange)">12 months</div>
+        <input type="range" id="inp-duration" min="12" max="48" value="12" step="12">
+        <div class="range-labels"><span>12 mo</span><span>24 mo</span><span>36 mo</span><span>48 mo</span></div>
+      </div>
+      <div class="calc-field">
+        <label>Starting Collateral (BTC)</label>
+        <div class="input-wrap">
+          <input type="number" id="inp-collateral" value="0.17" min="0" max="1000" step="any">
+          <span class="suffix">₿</span>
+        </div>
+        <div class="field-hint">BTC pledged as collateral</div>
+      </div>
+    </div>
+
+    <!-- ROW 1: Miner & Cost -->
+    <div class="calc-grid">
+      <div class="calc-field">
+        <label>Hashrate (TH/s)</label>
+        <div class="input-wrap">
+          <input type="number" id="inp-hashrate" value="516" min="1" max="1000000" step="any">
+          <span class="suffix">TH/s</span>
+        </div>
+        <div class="field-hint">e.g. 516 for M73 516T</div>
+      </div>
+      <div class="calc-field">
+        <label>Power Draw (W)</label>
+        <div class="input-wrap">
+          <input type="number" id="inp-watts" value="7224" min="1" max="1000000" step="any">
+          <span class="suffix">W</span>
+        </div>
+        <div class="field-hint">Total miner wattage</div>
+      </div>
+      <div class="calc-field">
+        <label>Uptime</label>
+        <div class="range-display" id="disp-uptime">95%</div>
+        <input type="range" id="inp-uptime" min="50" max="100" value="95" step="1">
+        <div class="range-labels"><span>50%</span><span>100%</span></div>
+      </div>
+    </div>
+
+    <!-- ROW 2: Economics -->
+    <div class="calc-grid" style="margin-top:2px;">
+      <div class="calc-field">
+        <label>Hashprice</label>
+        <div class="input-wrap">
+          <span class="prefix">$</span>
+          <input type="number" id="inp-hashprice" value="0.031" min="0" max="100" step="any" class="has-prefix">
+        </div>
+        <div class="field-hint">
+          Current: $0.0323 &nbsp;·&nbsp;
+          <span style="color:var(--orange);cursor:pointer;font-weight:600;"
+                onclick="document.getElementById('inp-hashprice').value='0.0457';handleInputChange(document.getElementById('inp-hashprice'));">
+            Use 12-mo avg: $0.0457
+          </span>
+          &nbsp;·&nbsp;
+          <span style="color:var(--text-2);cursor:pointer;"
+                onclick="document.getElementById('inp-hashprice').value='0.0323';handleInputChange(document.getElementById('inp-hashprice'));">
+            Use current: $0.0323
+          </span>
+        </div>
+      </div>
+      <div class="calc-field">
+        <label>Electricity Rate ($/kWh)</label>
+        <div class="input-wrap">
+          <span class="prefix">$</span>
+          <input type="number" id="inp-elecrate" value="0.044" min="0" max="10" step="any" class="has-prefix">
+        </div>
+        <div class="field-hint" id="hint-breakeven">Breakeven: calculating...</div>
+      </div>
+      <div class="calc-field">
+        <label>Starting BTC Price</label>
+        <div class="input-wrap">
+          <span class="prefix">$</span>
+          <input type="number" id="inp-btcprice" value="71000" min="1" max="100000000" step="any" class="has-prefix">
+        </div>
+        <div class="field-hint">BTC price in Month 1</div>
+      </div>
+    </div>
+
+    <!-- ROW 3: BLOC & Growth -->
+    <div class="calc-grid-2" style="margin-top:2px;">
+      <div class="calc-field">
+        <label>BTC CAGR (Annual)</label>
+        <div class="range-display" id="disp-cagr">30%</div>
+        <input type="range" id="inp-cagr" min="0" max="120" value="30" step="5">
+        <div class="range-labels"><span>0%</span><span>120%</span></div>
+      </div>
+      <div class="calc-field">
+        <label>LoC APR</label>
+        <div class="range-display" id="disp-locapr">13%</div>
+        <input type="range" id="inp-locapr" min="1" max="30" value="13" step="0.5">
+        <div class="range-labels"><span>1%</span><span>30%</span></div>
+      </div>
+    </div>
+
+    <!-- ROW 4: Miner cost + tax -->
+    <div class="calc-grid" style="margin-top:2px;">
+      <div class="calc-field">
+        <label>Miner Cost (USD)</label>
+        <div class="input-wrap">
+          <span class="prefix">$</span>
+          <input type="number" id="inp-minercost" value="5800" min="0" max="100000000" step="any" class="has-prefix">
+        </div>
+        <div class="field-hint">Capital cost of hardware</div>
+      </div>
+      <div class="calc-field">
+        <label>Miner Cost (BTC)</label>
+        <div class="input-wrap">
+          <input type="number" id="inp-minerbtc" value="0.08169014" min="0" max="1000" step="any">
+          <span class="suffix">₿</span>
+        </div>
+        <div class="field-hint">Auto-calculated from USD cost ÷ starting BTC price</div>
+      </div>
+      <div class="calc-field">
+        <label>Tax Rate (Section 179)</label>
+        <div class="range-display" id="disp-taxrate">32%</div>
+        <input type="range" id="inp-taxrate" min="0" max="60" value="32" step="1">
+        <div class="range-labels"><span>0%</span><span>60%</span></div>
+        <div class="field-hint" id="field-hint-taxsavings">Tax savings: — &nbsp;·&nbsp; After-tax miner cost: —</div>
+      </div>
+    </div>
+
+    <!-- HOW MUCH BTC TO COLLATERALIZE -->
+    <div class="collat-section">
+      <div class="collat-header">
+        <div class="collat-header-top">
+          <div>
+            <div class="collat-title">How Much Bitcoin to Collateralize</div>
+            <div class="collat-desc">Based on your monthly electricity cost. Click a tier to apply it as your starting collateral and run the full projection.</div>
+          </div>
+          <span class="collat-note">All tiers survive an 80% BTC crash</span>
+        </div>
+      </div>
+      <div class="collat-tiers">
+        <button type="button" class="collat-tier" id="tier-minimum" onclick="applyTier('minimum')">
+          <span class="tier-applied">&#10003; Applied</span>
+          <div class="tier-name minimum">Minimum</div>
+          <div class="tier-btc" id="tier-min-btc">—</div>
+          <div class="tier-usd" id="tier-min-usd">—</div>
+          <div class="tier-ltv-bar-bg"><div class="tier-ltv-bar-fill" style="width:100%;background:#ef4444"></div></div>
+          <div class="tier-detail-row"><span class="tier-detail-key">Day-1 LTV</span><span class="tier-detail-val" style="color:#ef4444">15%</span></div>
+          <div class="tier-detail-row"><span class="tier-detail-key">80% crash → LTV</span><span class="tier-detail-val">75% (10 pts of cushion)</span></div>
+          <div class="tier-detail-row"><span class="tier-detail-key">Liquidation threshold</span><span class="tier-detail-val">85% LTV</span></div>
+          <div class="tier-cta">Bare minimum stack →</div>
+        </button>
+        <button type="button" class="collat-tier" id="tier-recommended" onclick="applyTier('recommended')">
+          <span class="tier-applied">&#10003; Applied</span>
+          <div class="tier-name recommended">Recommended</div>
+          <div class="tier-btc" id="tier-rec-btc">—</div>
+          <div class="tier-usd" id="tier-rec-usd">—</div>
+          <div class="tier-ltv-bar-bg"><div class="tier-ltv-bar-fill" style="width:33%;background:#f7931a"></div></div>
+          <div class="tier-detail-row"><span class="tier-detail-key">Day-1 LTV</span><span class="tier-detail-val" style="color:#f7931a">5%</span></div>
+          <div class="tier-detail-row"><span class="tier-detail-key">80% crash → LTV</span><span class="tier-detail-val">25% (60 pts of cushion)</span></div>
+          <div class="tier-detail-row"><span class="tier-detail-key">Liquidation threshold</span><span class="tier-detail-val">85% LTV</span></div>
+          <div class="tier-cta">Comfortable &amp; safe →</div>
+        </button>
+        <button type="button" class="collat-tier" id="tier-ideal" onclick="applyTier('ideal')">
+          <span class="tier-applied">&#10003; Applied</span>
+          <div class="tier-name ideal">Ideal</div>
+          <div class="tier-btc" id="tier-ideal-btc">—</div>
+          <div class="tier-usd" id="tier-ideal-usd">—</div>
+          <div class="tier-ltv-bar-bg"><div class="tier-ltv-bar-fill" style="width:13%;background:#22c55e"></div></div>
+          <div class="tier-detail-row"><span class="tier-detail-key">Day-1 LTV</span><span class="tier-detail-val" style="color:#22c55e">2%</span></div>
+          <div class="tier-detail-row"><span class="tier-detail-key">80% crash → LTV</span><span class="tier-detail-val">10% (75 pts of cushion)</span></div>
+          <div class="tier-detail-row"><span class="tier-detail-key">Liquidation threshold</span><span class="tier-detail-val">85% LTV</span></div>
+          <div class="tier-cta">Maximum breathing room →</div>
+        </button>
+      </div>
+      <div class="collat-formula">
+        <strong>Formula:</strong> Required BTC = Monthly Electricity Cost &divide; (Target LTV &times; BTC Price) &nbsp;&nbsp;
+        e.g. Recommended at current inputs: <code id="collat-formula-example">$231 &divide; (5% &times; $71,000) = 0.0651 &#8383;</code>
+      </div>
+    </div>
+
+    <div class="calc-reset-row">
+      <button class="calc-reset" id="btn-reset">&#8634; Reset to defaults</button>
+      <span class="live-badge"><span class="live-dot"></span>Live — all outputs update instantly</span>
+    </div>
+  </div>
+</div>
+
+<!-- METRICS STRIP -->
+<div class="metrics-strip">
+  <div class="metrics-inner">
+    <div class="metric">
+      <div class="metric-label">Ending Collateral</div>
+      <div class="metric-value orange" id="m-collateral">—</div>
+      <div class="metric-sub" id="m-collateral-usd">—</div>
+      <div class="metric-change up" id="m-collateral-change">—</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Net BTC Position</div>
+      <div class="metric-value up" id="m-netbtc">—</div>
+      <div class="metric-sub" id="m-netbtc-sub">—</div>
+      <div class="metric-change up" id="m-netbtc-change">—</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Final LTV</div>
+      <div class="metric-value" id="m-ltv">—</div>
+      <div class="metric-sub" id="m-ltv-sub">—</div>
+      <div class="metric-change up" id="m-ltv-status">—</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Cost of Capital</div>
+      <div class="metric-value orange" id="m-capital">—</div>
+      <div class="metric-sub" id="m-capital-sub">—</div>
+      <div class="metric-change dn">Cost of hashrate</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">BTC Gained / After-Tax Cost</div>
+      <div class="metric-value up" id="m-btcroi">—</div>
+      <div class="metric-sub" id="m-btcroi-sub">—</div>
+      <div class="metric-change" id="m-btcroi-change">—</div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- PERFORMANCE -->
+<div class="section" id="performance">
+  <div class="section-eye">Performance</div>
+  <div class="section-title" id="perf-title">12-Month Overview</div>
+  <p class="section-desc">All charts update live when you change calculator inputs above.</p>
+
+  <!-- PROFITABILITY WARNING -->
+  <div id="profit-warning" style="display:none; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.35); border-left:3px solid #ef4444; padding:14px 20px; margin-bottom:16px;">
+    <div style="font-size:13px; font-weight:700; color:#ef4444; margin-bottom:4px;">⚠ Unprofitable Operation</div>
+    <div id="profit-warning-text" style="font-size:13px; color:var(--text-2); line-height:1.6;"></div>
+  </div>
+
+  <div class="chart-grid full">
+    <div class="chart-panel">
+      <div class="chart-panel-title">Net BTC Gained: BLOC vs No BLOC</div>
+      <div class="chart-panel-desc">BTC gained from mining above starting collateral — BLOC keeps all mined BTC and owes the LoC; No BLOC sells BTC monthly to cover electricity</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+        <div class="chart-legend">
+          <div class="leg"><div class="leg-dot" style="background:#22c55e"></div>Net BTC Gained (BLOC)</div>
+          <div class="leg"><div class="leg-dot" style="background:#a78bfa"></div>Net BTC Gained (No BLOC)</div>
+        </div>
+        <div style="display:flex; gap:16px;">
+          <span style="font-size:12px; color:var(--text-3);">Final BLOC: <strong id="chart-final-bloc" style="color:#22c55e">—</strong></span>
+          <span style="font-size:12px; color:var(--text-3);">Final No BLOC: <strong id="chart-final-nobloc" style="color:#a78bfa">—</strong></span>
+        </div>
+      </div>
+      <canvas id="chartCollateral" height="180"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-grid full" style="margin-top:2px;">
+    <div class="chart-panel">
+      <div class="chart-panel-title">Monthly Cash Flow</div>
+      <div class="chart-panel-desc">Revenue vs electricity vs LoC interest vs paydown when LTV exceeds 15%</div>
+      <div class="chart-legend">
+        <div class="leg"><div class="leg-dot" style="background:#f7931a"></div>Revenue</div>
+        <div class="leg"><div class="leg-dot" style="background:#ef4444"></div>Electricity (via LoC)</div>
+        <div class="leg"><div class="leg-dot" style="background:#3b82f6"></div>LoC Interest</div>
+        <div class="leg"><div class="leg-dot" style="background:#eab308"></div>LoC Paydown</div>
+        <div class="leg"><div class="leg-dot" style="background:#22c55e"></div>Net BTC Mined (USD equiv)</div>
+      </div>
+      <canvas id="chartCashflow" height="130"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- SENSITIVITY TABLE -->
+<div class="section" id="sensitivity">
+  <div class="section-eye">Sensitivity Analysis</div>
+  <div class="section-title">Max Cost per TH</div>
+  <p class="section-desc">The maximum you should pay per TH of hashrate for a given payback period, electricity rate, and miner efficiency. Updates live with your hashprice input above.</p>
+
+  <div class="sens-controls">
+    <div class="sens-control">
+      <label>Payback Period</label>
+      <select id="sens-months">
+        <option value="12">12 months</option>
+        <option value="18">18 months</option>
+        <option value="24" selected>24 months</option>
+        <option value="36">36 months</option>
+        <option value="48">48 months</option>
+      </select>
+    </div>
+    <div class="sens-control">
+      <label>Your Miner Efficiency</label>
+      <select id="sens-highlight">
+        <option value="">None (no highlight)</option>
+        <option value="13">13 J/TH (next-gen)</option>
+        <option value="14">14 J/TH</option>
+        <option value="15">15 J/TH (S21 Pro)</option>
+        <option value="17">17 J/TH (S21)</option>
+        <option value="19">19 J/TH (S19 XP)</option>
+        <option value="21">21 J/TH (S19j Pro+)</option>
+        <option value="25">25 J/TH (S19j Pro)</option>
+        <option value="30">30 J/TH (S19)</option>
+        <option value="34">34 J/TH (S19 base)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="sens-table-wrap">
+    <table class="sens-table" id="sensTable">
+      <thead id="sensHead"></thead>
+      <tbody id="sensBody"></tbody>
+    </table>
+  </div>
+  <div class="sens-note" id="sensNote"></div>
+</div>
+
+</div><!-- /page -->
+
+<div class="footer-wrap">
+  <span class="footer-copy">Bitcoin_Mining_BTC_Yield_Year_1.csv · Not financial advice.</span>
+  <a href="https://liveonbitcoin.jackmallers.com/advisor.html" target="_blank" class="footer-link">Strike Smart BLOC Advisor ↗</a>
+</div>
+
+<script>
+// ── DEFAULTS ──────────────────────────────────────────────────────────
+const DEFAULTS = {
+  hashrate: 516, watts: 7224, uptime: 95,
+  hashprice: 0.031, elecrate: 0.044,
+  btcprice: 71000, cagr: 30, locapr: 13,
+  collateral: 0.17, minercost: 5800, minerbtc: 0.08169014,
+  duration: 12, taxrate: 32
+};
+
+// ── COMPUTE ENGINE ────────────────────────────────────────────────────
+function compute(p, numMonths) {
+  const monthlyCAGR = Math.pow(1 + p.cagr / 100, 1/12) - 1;
+  const monthlyAPR  = p.locapr / 100 / 12;
+  const hoursPerMonth = 24 * 30.44;
+  const kWhPerMonth = (p.watts / 1000) * hoursPerMonth * (p.uptime / 100);
+  const elecUSD = kWhPerMonth * p.elecrate;
+  const revUSD  = p.hashrate * p.hashprice * 30.44 * (p.uptime / 100); // uptime applied to both elec and revenue
+  const LTV_TARGET = 0.15;
+
+  const months = [];
+  let locBal = 0;
+  let collBTC = p.collateral;
+  let btcPrice = p.btcprice;
+
+  for (let i = 0; i < numMonths; i++) {
+    // 1. Interest capitalizes onto LoC
+    const interest = locBal * monthlyAPR;
+    locBal += interest;
+
+    // 2. Draw electricity cost from LoC
+    locBal += elecUSD;
+
+    // 3. Mining revenue arrives as BTC — add to collateral first
+    const revBTC  = revUSD  / btcPrice;
+    const elecBTC = elecUSD / btcPrice;
+    // Net BTC actually earned this month after paying electricity in BTC terms
+    const netRevBTC = revBTC - elecBTC;
+    // Is this month unprofitable in USD terms?
+    const unprofitable = elecUSD > revUSD;
+    collBTC += revBTC;
+
+    // 4. Check LTV — if over 15%, sell mined BTC to pay down LoC in fiat
+    let paydown = 0;
+    let paydownBTC = 0;
+    const collUSDBeforePaydown = collBTC * btcPrice;
+    const ltvBeforePaydown = locBal / collUSDBeforePaydown * 100;
+
+    if (ltvBeforePaydown > LTV_TARGET * 100) {
+      const excess = locBal - collUSDBeforePaydown * LTV_TARGET;
+      paydown    = Math.min(excess, revUSD);
+      paydownBTC = paydown / btcPrice;  // BTC sold to fund the fiat paydown
+      locBal  -= paydown;               // fiat debt reduced
+      collBTC -= paydownBTC;            // BTC sold leaves collateral
+    }
+
+    const collUSD = collBTC * btcPrice;
+    const ltv = (locBal / collUSD) * 100;
+    const locBTC = locBal / btcPrice;
+    const netBTC = collBTC - locBTC;
+
+    months.push({
+      n: 'Month ' + (i+1), s: 'M' + (i+1),
+      btcPrice, revUSD, elecUSD, interest, paydown, paydownBTC,
+      locBal, collBTC, collUSD, ltv, netBTC,
+      revBTC, elecBTC, netRevBTC, unprofitable, kWhPerMonth
+    });
+
+    btcPrice *= (1 + monthlyCAGR);
+  }
+  return months;
+}
+
+// ── NO-BLOC COMPARISON ENGINE ─────────────────────────────────────────
+function computeNoBloc(p, numMonths) {
+  const monthlyCAGR = Math.pow(1 + p.cagr / 100, 1/12) - 1;
+  const hoursPerMonth = 24 * 30.44;
+  const kWhPerMonth = (p.watts / 1000) * hoursPerMonth * (p.uptime / 100);
+  const elecUSD = kWhPerMonth * p.elecrate;
+  const revUSD  = p.hashrate * p.hashprice * 30.44 * (p.uptime / 100); // uptime applied to revenue
+
+  const noBloc = [];
+  let btcHeld = p.collateral;
+  let btcPrice = p.btcprice;
+
+  for (let i = 0; i < numMonths; i++) {
+    const revBTC  = revUSD  / btcPrice;
+    const elecBTC = elecUSD / btcPrice;   // sell BTC to pay electricity
+    btcHeld += revBTC - elecBTC;          // net mined after selling for elec
+    noBloc.push({ s: 'M'+(i+1), btcHeld });
+    btcPrice *= (1 + monthlyCAGR);
+  }
+  return noBloc;
+}
+
+// ── CHART SETUP ────────────────────────────────────────────────────────
+Chart.defaults.color = '#555550';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 11;
+const G = { color:'#1e1e1e', borderDash:[3,4] };
+const T = { color:'#444440' };
+
+let chartColl, chartFlow;
+
+function initCharts(months, p__params) {
+  const noBloc = computeNoBloc(p__params, p__params.duration);
+  buildCharts(months, noBloc, p__params);
+}
+
+function buildCharts(months, noBloc, p) {
+  const labels = months.map(m => m.s);
+
+  if (chartColl) chartColl.destroy();
+  chartColl = new Chart(document.getElementById('chartCollateral'), {
+    type:'line', data:{ labels,
+      datasets:[
+        { label:'Net BTC Gained (BLOC)',    data:months.map(m=>m.netBTC - p.collateral),      borderColor:'#22c55e', backgroundColor:'rgba(34,197,94,0.06)',   fill:true, tension:0.4, pointRadius:3, borderWidth:2 },
+        { label:'Net BTC Gained (No BLOC)', data:noBloc.map(m=>m.btcHeld - p.collateral),     borderColor:'#a78bfa', backgroundColor:'rgba(167,139,250,0.06)', fill:true, tension:0.4, pointRadius:3, borderWidth:2, borderDash:[5,3] }
+      ]},
+    options:{ responsive:true, interaction:{mode:'index',intersect:false}, plugins:{legend:{display:false}},
+      scales:{ x:{grid:G,ticks:{...T,maxTicksLimit:13}}, y:{grid:G,ticks:{...T,callback:v=>v.toFixed(4)+'₿'}} } }
+  });
+
+  if (chartFlow) chartFlow.destroy();
+  chartFlow = new Chart(document.getElementById('chartCashflow'), {
+    type:'bar', data:{ labels,
+      datasets:[
+        { label:'Revenue',                  data:months.map(m=>m.revUSD),                           backgroundColor:'rgba(247,147,26,0.7)',  borderRadius:3 },
+        { label:'Electricity',              data:months.map(m=>m.elecUSD),                          backgroundColor:'rgba(239,68,68,0.6)',   borderRadius:3 },
+        { label:'LoC Interest',             data:months.map(m=>m.interest),                         backgroundColor:'rgba(59,130,246,0.6)',  borderRadius:3 },
+        { label:'LoC Paydown',              data:months.map(m=>m.paydown),                          backgroundColor:'rgba(234,179,8,0.75)',  borderRadius:3 },
+        { label:'Net BTC Mined (USD equiv)',data:months.map(m=>Math.max(0,m.netRevBTC)*m.btcPrice), backgroundColor:'rgba(34,197,94,0.65)',  borderRadius:3, type:'line', borderColor:'#22c55e', borderWidth:2, pointRadius:3, fill:false, yAxisID:'y' }
+      ]},
+    options:{ responsive:true, interaction:{mode:'index',intersect:false}, plugins:{legend:{display:false}},
+      scales:{ x:{grid:G,ticks:{...T,maxTicksLimit:13}}, y:{grid:G,ticks:{...T,callback:v=>'$'+v.toFixed(0)}} } }
+  });
+}
+
+function updateCharts(months, noBloc, p) {
+  buildCharts(months, noBloc, p);
+}
+
+// ── FORMAT HELPERS ─────────────────────────────────────────────────────
+function usd(n,d=2){ return '$'+parseFloat(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function btcFmt(n){ return parseFloat(n).toFixed(6)+' ₿'; }
+function pct(n,d=2){ return parseFloat(n).toFixed(d)+'%'; }
+
+// ── RENDER ALL ──────────────────────────────────────────────────────────
+function renderAll(months, params) {
+  const last = months[months.length - 1];
+  const first = months[0];
+
+
+
+  // Metrics strip
+  document.getElementById('m-collateral').textContent = btcFmt(last.collBTC);
+  document.getElementById('m-collateral-usd').textContent = usd(last.collUSD)+' USD';
+  const collGrowth = ((last.collBTC - params.collateral) / params.collateral * 100).toFixed(1);
+  document.getElementById('m-collateral-change').textContent = '↑ +'+collGrowth+'% over '+months.length+' mo';
+
+  document.getElementById('m-netbtc').textContent = btcFmt(last.netBTC);
+  document.getElementById('m-netbtc-sub').textContent = 'After LoC deducted (M'+months.length+')';
+  document.getElementById('m-netbtc-change').textContent = '↑ from '+btcFmt(first.netBTC)+' M1';
+
+  const ltvEl = document.getElementById('m-ltv');
+  ltvEl.textContent = pct(last.ltv);
+  ltvEl.className = 'metric-value ' + (last.ltv > 15 ? 'metric-value--red' : '');
+  ltvEl.style.color = last.ltv > 15 ? 'var(--red)' : 'var(--text)';
+  document.getElementById('m-ltv-sub').textContent = 'Target: stay below 15%';
+  const ltvStatus = document.getElementById('m-ltv-status');
+  if (last.ltv > 15) { ltvStatus.textContent = '⚠ Exceeds 15% limit'; ltvStatus.className = 'metric-change dn'; }
+  else { ltvStatus.textContent = '✓ Safe every month'; ltvStatus.className = 'metric-change up'; }
+
+  document.getElementById('m-capital').textContent = params.minerbtc.toFixed(8)+' ₿';
+  document.getElementById('m-capital-sub').textContent = usd(params.minercost, 0)+' USD';
+
+  // Breakeven electricity rate
+  // Rev/mo = hashrate * hashprice * 30.44 * uptime/100
+  // kWh/mo = (watts/1000) * 24 * 30.44 * uptime/100
+  // Uptime cancels: breakeven = (hashrate * hashprice) / (watts/1000 * 24)
+  const breakevenRate = (params.hashrate * params.hashprice) / (params.watts / 1000 * 24);
+  const margin        = params.elecrate - breakevenRate;
+  const marginPct     = (margin / breakevenRate) * 100;
+  const beEl          = document.getElementById('hint-breakeven');
+  if (beEl) {
+    const beColor  = params.elecrate < breakevenRate ? 'var(--green)' : 'var(--red)';
+    const beStatus = params.elecrate < breakevenRate
+      ? '✓ profitable by $' + Math.abs(margin).toFixed(4) + '/kWh (' + Math.abs(marginPct).toFixed(1) + '% margin)'
+      : '⚠ unprofitable by $' + Math.abs(margin).toFixed(4) + '/kWh';
+    beEl.innerHTML = 'Breakeven: <strong style="color:var(--orange)">$'
+      + breakevenRate.toFixed(4) + '/kWh</strong>'
+      + ' &nbsp;·&nbsp; <span style="color:' + beColor + '">' + beStatus + '</span>';
+  }
+
+  // BTC Gained / After-Tax Miner Cost in BTC (Section 179)
+  // Tax savings reduce the true cost of the miner
+  const taxSavingsUSD    = params.minercost * (params.taxrate / 100);
+  const afterTaxCostUSD  = params.minercost - taxSavingsUSD;
+  const afterTaxCostBTC  = afterTaxCostUSD / params.btcprice;
+  const btcGained        = last.netBTC - params.collateral;
+  const btcROI           = afterTaxCostBTC > 0 && btcGained > 0
+    ? (btcGained / afterTaxCostBTC) * 100 : 0;
+  const annROI           = afterTaxCostBTC > 0 && btcGained > 0
+    ? (Math.pow(btcGained / afterTaxCostBTC, 12 / months.length) - 1) * 100 : 0;
+  const btcRoiEl = document.getElementById('m-btcroi');
+  btcRoiEl.textContent = btcROI.toFixed(2) + '%';
+  btcRoiEl.style.color = btcROI >= 100 ? 'var(--green)' : btcROI > 0 ? 'var(--yellow)' : 'var(--red)';
+  document.getElementById('m-btcroi-sub').textContent =
+    btcFmt(btcGained) + ' gained / ' + btcFmt(afterTaxCostBTC) + ' after-tax cost';
+  const roiChangeEl = document.getElementById('m-btcroi-change');
+  roiChangeEl.textContent = annROI.toFixed(1) + '% ann. · tax saves ' + usd(taxSavingsUSD, 0);
+  roiChangeEl.className   = 'metric-change ' + (btcROI >= 100 ? 'up' : 'dn');
+
+  // Update tax savings hint on field
+  const taxHint = document.getElementById('field-hint-taxsavings');
+  if (taxHint) {
+    taxHint.innerHTML = 'Tax savings: <strong style="color:var(--green)">' + usd(taxSavingsUSD, 0) + '</strong>'
+      + ' &nbsp;·&nbsp; After-tax cost: <strong style="color:var(--orange)">'
+      + usd(afterTaxCostUSD, 0) + ' / ' + afterTaxCostBTC.toFixed(5) + ' &#8383;</strong>';
+  }
+
+  // Period totals
+  const totalRev   = months.reduce((s,m)=>s+m.revUSD, 0);
+  const totalElec  = months.reduce((s,m)=>s+m.elecUSD, 0);
+  const totalInt   = months.reduce((s,m)=>s+m.interest, 0);
+  const totalPay   = months.reduce((s,m)=>s+m.paydown, 0);
+  const tRev = document.getElementById('t-revenue');     if (tRev)    tRev.textContent    = usd(totalRev);
+  const tElec = document.getElementById('t-elec');       if (tElec)   tElec.textContent   = usd(totalElec);
+  const tProf = document.getElementById('t-profit');     if (tProf)   tProf.textContent   = usd(totalRev - totalElec);
+  const tInt  = document.getElementById('t-interest');   if (tInt)    tInt.textContent    = usd(totalInt);
+  const durEl = document.getElementById('totals-period-label');
+  if (durEl) durEl.textContent = params.duration + '-Month Totals';
+
+  // Update performance section title
+  const perfTitle = document.getElementById('perf-title');
+  if (perfTitle) perfTitle.textContent = params.duration + '-Month Overview';
+
+  // ── PROFITABILITY CHECK ──────────────────────────────────────────────
+  const unprofMonths = months.filter(m => m.unprofitable);
+  const warnEl  = document.getElementById('profit-warning');
+  const warnTxt = document.getElementById('profit-warning-text');
+  if (unprofMonths.length > 0 && warnEl && warnTxt) {
+    warnEl.style.display = 'block';
+    const firstUnprof = unprofMonths[0];
+    const margin = firstUnprof.revUSD - firstUnprof.elecUSD;
+    warnTxt.innerHTML =
+      'Electricity cost exceeds mining revenue in <strong>' + unprofMonths.length + ' of ' + months.length + ' months</strong> ' +
+      '(starting ' + firstUnprof.n + '). ' +
+      'At current inputs, monthly revenue is <strong>' + usd(firstUnprof.revUSD) + '</strong> vs electricity cost of <strong>' + usd(firstUnprof.elecUSD) + '</strong> — ' +
+      'a <strong style="color:#ef4444">' + usd(Math.abs(margin)) + ' loss per month</strong>. ' +
+      'The LoC continues covering electricity costs but the operation is cash-flow negative. ' +
+      'Consider reducing electricity rate, increasing hashprice, or improving uptime.';
+  } else if (warnEl) {
+    warnEl.style.display = 'none';
+  }
+
+}
+
+
+// ── GET PARAMS FROM INPUTS ─────────────────────────────────────────────
+function getVal(id, def) {
+  const el = document.getElementById(id);
+  if (!el) return def;
+  const v = parseFloat(el.value);
+  return isNaN(v) ? def : v;
+}
+function getParams() {
+  return {
+    hashrate:   getVal('inp-hashrate',  DEFAULTS.hashrate),
+    watts:      getVal('inp-watts',     DEFAULTS.watts),
+    uptime:     getVal('inp-uptime',    DEFAULTS.uptime),
+    hashprice:  getVal('inp-hashprice', DEFAULTS.hashprice),
+    elecrate:   getVal('inp-elecrate',  DEFAULTS.elecrate),
+    btcprice:   getVal('inp-btcprice',  DEFAULTS.btcprice),
+    cagr:       getVal('inp-cagr',      DEFAULTS.cagr),
+    locapr:     getVal('inp-locapr',    DEFAULTS.locapr),
+    collateral: getVal('inp-collateral',DEFAULTS.collateral),
+    minercost:  getVal('inp-minercost', DEFAULTS.minercost),
+    minerbtc:   getVal('inp-minerbtc',  DEFAULTS.minerbtc),
+    duration:   getVal('inp-duration',  DEFAULTS.duration),
+    taxrate:    getVal('inp-taxrate',   DEFAULTS.taxrate),
+  };
+}
+
+// ── COLLATERALIZE TIERS ────────────────────────────────────────────────
+const TIER_LTV = { minimum: 0.15, recommended: 0.05, ideal: 0.02 };
+let activeTier = null;
+
+function updateTiers(params) {
+  const hoursPerMonth = 24 * 30.44;
+  const kWhPerMonth = (params.watts / 1000) * hoursPerMonth * (params.uptime / 100);
+  const elecCostUSD = kWhPerMonth * params.elecrate;
+  const btcP = params.btcprice;
+
+  const tierDefs = [
+    { key: 'minimum',     ltv: 0.15, idSuffix: 'min'   },
+    { key: 'recommended', ltv: 0.05, idSuffix: 'rec'   },
+    { key: 'ideal',       ltv: 0.02, idSuffix: 'ideal' },
+  ];
+
+  tierDefs.forEach(function(t) {
+    var btcNeeded = elecCostUSD / (t.ltv * btcP);
+    var usdNeeded = btcNeeded * btcP;
+    var btcEl = document.getElementById('tier-' + t.idSuffix + '-btc');
+    var usdEl = document.getElementById('tier-' + t.idSuffix + '-usd');
+    if (btcEl) btcEl.textContent = btcNeeded.toFixed(5) + ' ₿';
+    if (usdEl) usdEl.textContent = '$' + usdNeeded.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' USD';
+  });
+
+  var recBTC = elecCostUSD / (0.05 * btcP);
+  var fmEl = document.getElementById('collat-formula-example');
+  if (fmEl) {
+    var elecStr = '$' + elecCostUSD.toFixed(2);
+    var priceStr = '$' + Math.round(btcP).toLocaleString();
+    fmEl.textContent = elecStr + ' ÷ (5% × ' + priceStr + ') = ' + recBTC.toFixed(4) + ' ₿';
+  }
+}
+
+function applyTier(tier) {
+  const p = getParams();
+  const hoursPerMonth = 24 * 30.44;
+  const kWhPerMonth = (p.watts / 1000) * hoursPerMonth * (p.uptime / 100);
+  const elecCostUSD = kWhPerMonth * p.elecrate;
+  const ltvMap = { minimum: 0.15, recommended: 0.05, ideal: 0.02 };
+  const btcNeeded = elecCostUSD / (ltvMap[tier] * p.btcprice);
+
+  document.getElementById('inp-collateral').value = btcNeeded.toFixed(6);
+  activeTier = tier;
+
+  ['minimum','recommended','ideal'].forEach(t => {
+    const el = document.getElementById('tier-' + t);
+    if (el) el.classList.toggle('active', t === tier);
+  });
+
+  update();
+}
+
+// ── MAIN UPDATE ────────────────────────────────────────────────────────
+let isInit = false;
+function update() {
+  const params = getParams();
+  const months = compute(params, params.duration);
+  const noBloc = computeNoBloc(params, params.duration);
+  if (!isInit) {
+    initCharts(months, params);
+    isInit = true;
+
+  } else {
+    updateCharts(months, noBloc, params);
+  }
+  renderAll(months, params);
+  updateTiers(params);
+  buildSensitivityTable();
+}
+
+// ── WIRE INPUTS ────────────────────────────────────────────────────────
+function syncMinerBTC() {
+  const costUSD  = parseFloat(document.getElementById('inp-minercost').value);
+  const btcPrice = parseFloat(document.getElementById('inp-btcprice').value);
+  if (!isNaN(costUSD) && !isNaN(btcPrice) && btcPrice > 0) {
+    document.getElementById('inp-minerbtc').value = (costUSD / btcPrice).toFixed(8);
+  }
+}
+
+// Debounce: wait until user stops typing before running update
+// Sliders (range inputs) update immediately; number inputs wait 400ms
+let debounceTimer = null;
+function handleInputChange(inp) {
+  if (inp.id === 'inp-uptime')   document.getElementById('disp-uptime').textContent   = inp.value + '%';
+  if (inp.id === 'inp-cagr')     document.getElementById('disp-cagr').textContent     = inp.value + '%';
+  if (inp.id === 'inp-locapr')   document.getElementById('disp-locapr').textContent   = inp.value + '%';
+  if (inp.id === 'inp-duration') document.getElementById('disp-duration').textContent = inp.value + ' months';
+  if (inp.id === 'inp-taxrate')  document.getElementById('disp-taxrate').textContent  = inp.value + '%';
+  if (inp.id === 'inp-minercost' || inp.id === 'inp-btcprice') syncMinerBTC();
+
+  // Range sliders fire instantly; number inputs debounce to wait for full value
+  if (inp.type === 'range') {
+    update();
+  } else {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(update, 400);
+  }
+}
+
+document.querySelectorAll('input').forEach(inp => {
+  inp.addEventListener('input', () => handleInputChange(inp));
+});
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  document.getElementById('inp-hashrate').value  = DEFAULTS.hashrate;
+  document.getElementById('inp-watts').value     = DEFAULTS.watts;
+  document.getElementById('inp-uptime').value    = DEFAULTS.uptime;
+  document.getElementById('inp-hashprice').value = DEFAULTS.hashprice;
+  document.getElementById('inp-elecrate').value  = DEFAULTS.elecrate;
+  document.getElementById('inp-btcprice').value  = DEFAULTS.btcprice;
+  document.getElementById('inp-cagr').value      = DEFAULTS.cagr;
+  document.getElementById('inp-locapr').value    = DEFAULTS.locapr;
+  document.getElementById('inp-collateral').value= DEFAULTS.collateral;
+  document.getElementById('inp-minercost').value = DEFAULTS.minercost;
+  document.getElementById('inp-minerbtc').value  = DEFAULTS.minerbtc;
+  document.getElementById('inp-duration').value       = DEFAULTS.duration;
+  document.getElementById('inp-taxrate').value        = DEFAULTS.taxrate;
+  document.getElementById('disp-taxrate').textContent = DEFAULTS.taxrate + '%';
+  document.getElementById('disp-uptime').textContent  = DEFAULTS.uptime + '%';
+  document.getElementById('disp-cagr').textContent    = DEFAULTS.cagr + '%';
+  document.getElementById('disp-locapr').textContent  = DEFAULTS.locapr + '%';
+  document.getElementById('disp-duration').textContent = DEFAULTS.duration + ' months';
+  update();
+});
+
+// ── SENSITIVITY TABLE ──────────────────────────────────────────────────
+const SENS_EFFICIENCIES = [13, 14, 15, 17, 19, 21, 25, 30, 34];
+const SENS_ELEC_RATES   = [0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.10, 0.12];
+const SENS_LABELS = {
+  13:'13 J/TH (next-gen)', 14:'14 J/TH', 15:'15 J/TH (S21 Pro)',
+  17:'17 J/TH (S21)', 19:'19 J/TH (S19 XP)', 21:'21 J/TH (S19j Pro+)',
+  25:'25 J/TH (S19j Pro)', 30:'30 J/TH (S19)', 34:'34 J/TH (S19 base)'
+};
+
+function buildSensitivityTable() {
+  const hashprice  = getVal('inp-hashprice', DEFAULTS.hashprice);
+  const months     = parseInt(document.getElementById('sens-months').value) || 24;
+  const highlight  = document.getElementById('sens-highlight').value;
+
+  const head = document.getElementById('sensHead');
+  const body = document.getElementById('sensBody');
+  const note = document.getElementById('sensNote');
+  if (!head || !body) return;
+
+  // Header row
+  head.innerHTML = '<tr><th>Efficiency</th>'
+    + SENS_ELEC_RATES.map(r => '<th>$' + r.toFixed(2) + '/kWh</th>').join('')
+    + '</tr>';
+
+  // Body rows
+  body.innerHTML = '';
+  SENS_EFFICIENCIES.forEach(eff => {
+    const isHighlight = String(eff) === highlight;
+    let row = '<tr>';
+    row += '<td' + (isHighlight ? ' style="color:var(--orange);font-weight:800;"' : '') + '>'
+      + (SENS_LABELS[eff] || eff + ' J/TH') + '</td>';
+
+    SENS_ELEC_RATES.forEach(er => {
+      const revPerTH  = hashprice * 30.44;                    // $/TH/month
+      const elecPerTH = (eff / 1000) * 24 * 30.44 * er;      // $/TH/month
+      const netTotal  = (revPerTH - elecPerTH) * months;      // max $/TH over period
+
+      let cls, text;
+      if (netTotal <= 0) {
+        cls  = 'cell-under'; text = 'Underwater';
+      } else if (netTotal > 15) {
+        cls  = 'cell-great'; text = '$' + netTotal.toFixed(2);
+      } else if (netTotal > 8) {
+        cls  = 'cell-good';  text = '$' + netTotal.toFixed(2);
+      } else if (netTotal > 4) {
+        cls  = 'cell-ok';    text = '$' + netTotal.toFixed(2);
+      } else {
+        cls  = 'cell-tight'; text = '$' + netTotal.toFixed(2);
+      }
+      if (isHighlight) cls += ' cell-active-row';
+      row += '<td class="' + cls + '">' + text + '</td>';
+    });
+    row += '</tr>';
+    body.innerHTML += row;
+  });
+
+  // Note
+  note.innerHTML = "<strong>How to read this:</strong> Find your miner efficiency (J/TH) and electricity rate. "
+    + "The cell shows the max you should pay per TH to break even within the selected payback period at the current hashprice of "
+    + "<strong style='color:var(--orange)'>$" + hashprice.toFixed(4) + "/TH/day</strong>. "
+    + "Green = strong economics, yellow = marginal, orange = tight, red = underwater.";
+}
+
+document.getElementById('sens-months').addEventListener('change', buildSensitivityTable);
+document.getElementById('sens-highlight').addEventListener('change', buildSensitivityTable);
+
+// ── INIT ───────────────────────────────────────────────────────────────
+syncMinerBTC();
+update();
+buildSensitivityTable();
+</script>
+</body>
+</html>
